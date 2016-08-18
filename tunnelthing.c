@@ -503,10 +503,12 @@ init()
   reshape_viewport();
 }
 
+static SDL_Joystick * joystick;
+
 static inline void
 update_view()
 {
-  static float rho, theta, margin, ex, ey, controlx, controly, longside, shortside;
+  static float rho, theta, ex, ey, controlx, controly;
   static int mousex, mousey;
   static float dt, nt, t;
 
@@ -515,13 +517,19 @@ update_view()
   dt = nt - t;
   t = nt;
 
-  SDL_GetMouseState(&mousex, &mousey);
-  longside = vwidth > vheight? vwidth: vheight;
-  shortside = vwidth < vheight? vwidth: vheight;
+  if (joystick) {
+    ex = (((float)SDL_JoystickGetAxis(joystick, 0) + (float)SDL_JoystickGetAxis(joystick, 3)) / -32768.0f) * 0.9f;
+    ey = (((float)SDL_JoystickGetAxis(joystick, 1) + (float)SDL_JoystickGetAxis(joystick, 4)) /  32768.0f) * 0.9f;
+  } else {
+    static float margin, longside, shortside;
+    SDL_GetMouseState(&mousex, &mousey);
+    longside = vwidth > vheight? vwidth: vheight;
+    shortside = vwidth < vheight? vwidth: vheight;
 
-  margin = (longside - shortside) / 2.0f;
-  ex = -((width >= height? clamp((float)mousex, margin, margin + shortside) - margin: (float)mousex) / shortside - 0.5f) * 2.0f;
-  ey =  ((width >= height? (float)mousey: clamp((float)mousey, margin, margin + shortside) - margin) / shortside - 0.5f) * 2.0f;
+    margin = (longside - shortside) / 2.0f;
+    ex = -((width >= height? clamp((float)mousex, margin, margin + shortside) - margin: (float)mousex) / shortside - 0.5f) * 2.0f;
+    ey =  ((width >= height? (float)mousey: clamp((float)mousey, margin, margin + shortside) - margin) / shortside - 0.5f) * 2.0f;
+  }
 
   polar(ex, ey, &rho, &theta);
 
@@ -610,9 +618,13 @@ main()
 {
   uint32_t window_flags;
 
-  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
     SDL_Log("error: Failed to initialize SDL with video: %s\n", SDL_GetError());
     return 1;
+  }
+
+  if(SDL_NumJoysticks() > 0) {
+    joystick = SDL_JoystickOpen(0);
   }
 
   window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL;
