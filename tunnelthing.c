@@ -12,7 +12,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <SDL.h>
+#ifndef NO_GLES
 #include <SDL_opengles2.h>
+#else
+#include <SDL_opengl.h>
+#endif
 
 #include <unistd.h>
 
@@ -147,7 +151,9 @@ static const GLushort rail_indices[] = {
 };
 
 static const char rail_vert_shader[] =
+#ifndef NO_GLES
   "precision lowp float;"
+#endif
   "attribute vec3 position;"
 
   "uniform mat4 viewProjectionMatrix;"
@@ -158,8 +164,9 @@ static const char rail_vert_shader[] =
   "}";
 
 static const char rail_frag_shader[] =
+#ifndef NO_GLES
   "precision lowp float;"
-
+#endif
   "void main() {"
     "float depth = gl_FragCoord.z / gl_FragCoord.w;"
     "gl_FragColor = vec4(vec3(1.0 - clamp(exp2(-0.04 * depth * depth * 1.442695), 0.0, 1.0)), 1.0);"
@@ -202,7 +209,9 @@ static const GLushort barrier_indices[] = {
 };
 
 static const GLchar barrier_vert_shader[] =
+#ifndef NO_GLES
   "precision lowp float;"
+#endif
   "attribute vec2 position;"
 
   "uniform float pixSize;"
@@ -224,8 +233,9 @@ static const GLchar barrier_vert_shader[] =
   "}";
 
 static const GLchar barrier_base_frag[] =
+#ifndef NO_GLES
   "precision lowp float;"
-
+#endif
   "varying vec2 euclid;"
   "varying float pixSizeFinal;"
   "varying float fade;"
@@ -640,7 +650,9 @@ main()
 
   SDL_ShowCursor(SDL_DISABLE);
 
+#ifndef NO_GLES
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#endif
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
